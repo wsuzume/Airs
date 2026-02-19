@@ -1,0 +1,13 @@
+services:
+  airs:
+    build:
+      context: ./airs
+      args:
+        - AIRS_BASE_IMAGE=${AIRS_BASE_IMAGE}
+    image: ${AIRS_TAG}
+    container_name: airs
+    ports:
+      - "8000:8000"
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
