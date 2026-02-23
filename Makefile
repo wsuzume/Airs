@@ -2,6 +2,18 @@
 build:
 	sudo docker compose --env-file envs/cpu.env build airs
 
+.PHONY: run
+run:
+	sudo docker compose --env-file envs/cpu.env up airs
+
+.PHONY: rund
+rund:
+	sudo docker compose --env-file envs/cpu.env up -d airs
+
+.PHONY: stop
+stop:
+	sudo docker compose --env-file envs/cpu.env down
+
 .PHONY: shell
 shell:
 	sudo docker compose --env-file envs/cpu.env run --rm airs /bin/bash
