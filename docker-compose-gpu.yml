@@ -7,7 +7,8 @@ services:
     image: ${AIRS_TAG}
     container_name: airs
     ports:
-      - "8000:8000"
+      - "8080:8080"
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+    command: ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none"]
