@@ -28,8 +28,8 @@ shell/gpu:
 
 .PHONY: run/gpu
 run/gpu:
-	sudo docker compose --env-file envs/gpu.env up airs
+	sudo docker compose -f docker-compose-gpu.yml --env-file envs/gpu.env up airs
 
 .PHONY: rund/gpu
 rund/gpu:
-	sudo docker compose --env-file envs/gpu.env up -d airs
+	sudo docker compose -f docker-compose-gpu.yml --env-file envs/gpu.env up -d airs
