@@ -16,7 +16,7 @@ stop:
 
 .PHONY: shell
 shell:
-	sudo docker compose --env-file envs/cpu.env run --rm airs /bin/bash
+	sudo docker compose --env-file envs/cpu.env exec -it airs /bin/bash
 
 .PHONY: build/gpu
 build/gpu:
