@@ -9,6 +9,7 @@ services:
     ports:
       - "8080:8080"
     runtime: nvidia
+    volumes:
+      - ./work:/work
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-    command: ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none"]

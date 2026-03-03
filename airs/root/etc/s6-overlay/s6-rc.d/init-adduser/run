@@ -1,0 +1,56 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+TARGET_USER="${CS_USER:-josh}"
+TARGET_GROUP="${CS_GROUP:-${TARGET_USER}}"
+TARGET_UID="${CS_UID:-1000}"
+TARGET_GID="${CS_GID:-1000}"
+HOME_DIR="/home/${TARGET_USER}"
+
+# 指定 UID を持つ既存ユーザーが TARGET_USER と別名なら削除
+EXISTING_USER_BY_UID="$(getent passwd "${TARGET_UID}" | cut -d: -f1)"
+if [[ -n "${EXISTING_USER_BY_UID}" && "${EXISTING_USER_BY_UID}" != "${TARGET_USER}" ]]; then
+    echo "init-adduser: user '${EXISTING_USER_BY_UID}' is using UID=${TARGET_UID}. Deleting..."
+    userdel "${EXISTING_USER_BY_UID}"
+    echo "init-adduser: user '${EXISTING_USER_BY_UID}' has been deleted."
+fi
+
+# 指定 GID を持つ既存グループが TARGET_GROUP と別名なら削除
+EXISTING_GROUP_BY_GID="$(getent group "${TARGET_GID}" | cut -d: -f1)"
+if [[ -n "${EXISTING_GROUP_BY_GID}" && "${EXISTING_GROUP_BY_GID}" != "${TARGET_GROUP}" ]]; then
+    echo "init-adduser: group '${EXISTING_GROUP_BY_GID}' is using GID=${TARGET_GID}. Deleting..."
+    groupdel "${EXISTING_GROUP_BY_GID}"
+    echo "init-adduser: group '${EXISTING_GROUP_BY_GID}' has been deleted."
+fi
+
+# グループの存在確認・作成
+if getent group "${TARGET_GROUP}" &>/dev/null; then
+    echo "init-adduser: group '${TARGET_GROUP}' already exists."
+else
+    echo "init-adduser: creating group '${TARGET_GROUP}' (GID=${TARGET_GID})..."
+    groupadd --gid "${TARGET_GID}" "${TARGET_GROUP}"
+    echo "init-adduser: group '${TARGET_GROUP}' has been created."
+fi
+
+# ユーザーの存在確認・作成
+if id "${TARGET_USER}" &>/dev/null; then
+    echo "init-adduser: user '${TARGET_USER}' already exists."
+else
+    # ホームディレクトリの有無で --create-home / --no-create-home を切り替え
+    if [[ -d "${HOME_DIR}" ]]; then
+        echo "init-adduser: home directory '${HOME_DIR}' already exists. Skipping creation."
+        CREATE_HOME_OPT="--no-create-home"
+    else
+        echo "init-adduser: home directory '${HOME_DIR}' does not exist. Will create."
+        CREATE_HOME_OPT="--create-home"
+    fi
+
+    echo "init-adduser: user '${TARGET_USER}' does not exist. Creating..."
+    useradd \
+        --uid "${TARGET_UID}" \
+        --gid "${TARGET_GID}" \
+        "${CREATE_HOME_OPT}" \
+        --shell /bin/bash \
+        "${TARGET_USER}"
+    echo "init-adduser: user '${TARGET_USER}' has been created."
+fi

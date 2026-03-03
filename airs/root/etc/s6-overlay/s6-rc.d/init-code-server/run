@@ -1,0 +1,29 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+TARGET_USER="${CS_UID:-${CS_USER:-josh}}"
+TARGET_GROUP="${CS_GID:-${CS_GROUP:-${TARGET_USER}}}"
+WORKDIR="${CS_WORKDIR:-/work}"
+
+HOME_DIR="/home/${TARGET_USER}"
+
+# OpenFolder のデフォルトパスを /work にするには、以下の設定と、
+# code-server の起動時に起動フォルダとして /work を渡さないことが必要。
+MACHINE_SETTINGS_DIR="${HOME_DIR}/.local/share/code-server/Machine"
+MACHINE_SETTINGS_FILE="${MACHINE_SETTINGS_DIR}/settings.json"
+
+mkdir -p "${MACHINE_SETTINGS_DIR}"
+chown -R "${TARGET_USER}:${TARGET_GROUP}" "${HOME_DIR}/.local"
+
+if [ -n "${CS_REMOTE_SETTINGS_TEMPLATE:-}" ]; then
+	cp "${CS_REMOTE_SETTINGS_TEMPLATE}" "${MACHINE_SETTINGS_FILE}"
+elif [ ! -f "${MACHINE_SETTINGS_FILE}" ]; then
+	echo '{}' > "${MACHINE_SETTINGS_FILE}"
+fi
+
+tmpfile="$(mktemp)"
+jq --arg workdir "${WORKDIR}" '. + {"files.dialog.defaultPath": $workdir}' "${MACHINE_SETTINGS_FILE}" > "${tmpfile}"
+mv "${tmpfile}" "${MACHINE_SETTINGS_FILE}"
+
+chown "${TARGET_USER}:${TARGET_GROUP}" "${MACHINE_SETTINGS_FILE}"
+

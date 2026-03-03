@@ -1,3 +1,14 @@
-#!/bin/bash
+#!/command/with-contenv bash
 
-exec code-server --bind-addr 0.0.0.0:8080 --auth none
+TARGET_USER="${CS_UID:-${CS_USER:-josh}}"
+TARGET_GROUP="${CS_GID:-${CS_GROUP:-${TARGET_USER}}}"
+
+export HOME="/home/${TARGET_USER}"
+
+exec s6-setuidgid "${TARGET_USER}" \
+    code-server \
+        --bind-addr 0.0.0.0:8080 \
+        --user-data-dir "/home/${TARGET_USER}/.local/share/code-server" \
+        --extensions-dir "/home/${TARGET_USER}/.local/share/code-server/extensions" \
+        --auth none \
+        --disable-telemetry
