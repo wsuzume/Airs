@@ -6,10 +6,14 @@ ARG DEBIAN_FRONTEND="noninteractive"
 
 ## install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # used in this Dockerfile
     curl \
     ca-certificates \
     xz-utils \
-    jq \
+    # used in s6-overlay scripts
+    jq rsync \
+    # utilites for users
+    openssh-server git tree \
     && rm -rf /var/lib/apt/lists/*
 
 ## install code-server

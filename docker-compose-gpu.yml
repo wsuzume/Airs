@@ -8,8 +8,8 @@ services:
     container_name: airs
     ports:
       - "8080:8080"
-    runtime: nvidia
     volumes:
       - ./work:/work
+    runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all

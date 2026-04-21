@@ -8,3 +8,11 @@ services:
     container_name: airs
     ports:
       - "8080:8080"
+      - "5173:5173"
+    volumes:
+      - /home/josh/work:/home/josh
+      - /home/josh/.ssh:/home/josh/.ssh:ro
+    environment:
+      CS_USER: josh
+      CS_UID: 10000
+      CS_GID: 10000

@@ -54,3 +54,19 @@ else
         "${TARGET_USER}"
     echo "init-adduser: user '${TARGET_USER}' has been created."
 fi
+
+# /etc/skel の内容で、ホームに存在しないファイル/ディレクトリのみ作成
+if [[ ! -d "${HOME_DIR}" ]]; then
+    echo "init-adduser: home directory '${HOME_DIR}' does not exist. Creating..."
+    mkdir -p "${HOME_DIR}"
+fi
+
+if [[ -d /etc/skel ]]; then
+    echo "init-adduser: syncing missing files from /etc/skel to '${HOME_DIR}' with rsync..."
+    rsync -a --ignore-existing /etc/skel/ "${HOME_DIR}/"
+    chown -R "${TARGET_USER}:${TARGET_GROUP}" "${HOME_DIR}"
+else
+    echo "init-adduser: /etc/skel does not exist. Skipping skeleton sync."
+fi
+
+chown "${TARGET_USER}:${TARGET_GROUP}" "${HOME_DIR}"

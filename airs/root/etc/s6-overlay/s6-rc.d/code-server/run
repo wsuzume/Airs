@@ -1,6 +1,6 @@
 #!/command/with-contenv bash
 
-TARGET_USER="${CS_UID:-${CS_USER:-josh}}"
+TARGET_USER="${CS_USER:-josh}"
 TARGET_GROUP="${CS_GID:-${CS_GROUP:-${TARGET_USER}}}"
 
 export HOME="/home/${TARGET_USER}"
