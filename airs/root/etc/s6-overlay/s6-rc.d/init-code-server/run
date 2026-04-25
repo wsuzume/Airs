@@ -5,7 +5,9 @@ TARGET_USER="${CS_UID:-${CS_USER:-josh}}"
 TARGET_GROUP="${CS_GID:-${CS_GROUP:-${TARGET_USER}}}"
 WORKDIR="${CS_WORKDIR:-/work}"
 
-HOME_DIR="/home/${TARGET_USER}"
+# TARGET_USER がUID（数値）の場合も名前の場合も正しくホームディレクトリを解決する
+HOME_DIR=$(getent passwd "${TARGET_USER}" | cut -d: -f6)
+HOME_DIR="${HOME_DIR:-/home/${TARGET_USER}}"
 
 # OpenFolder のデフォルトパスを /work にするには、以下の設定と、
 # code-server の起動時に起動フォルダとして /work を渡さないことが必要。
@@ -27,3 +29,34 @@ mv "${tmpfile}" "${MACHINE_SETTINGS_FILE}"
 
 chown "${TARGET_USER}:${TARGET_GROUP}" "${MACHINE_SETTINGS_FILE}"
 
+# code-server 起動時に、/config/extensions にインストールされた拡張機能に対する
+# シンボリックリンクを /home/${TARGET_USER}/.local/share/code-server/extensions に作成する。
+SYSTEM_EXT_DIR=/config/extensions
+USER_EXT_DIR=${HOME_DIR}/.local/share/code-server/extensions
+
+echo "DEBUG: TARGET_USER=${TARGET_USER}"
+echo "DEBUG: HOME_DIR=${HOME_DIR}"
+echo "DEBUG: USER_EXT_DIR=${USER_EXT_DIR}"
+echo "DEBUG: whoami=$(whoami)"
+echo "DEBUG: SYSTEM_EXT_DIR contents:"
+ls -la "$SYSTEM_EXT_DIR" 2>&1 || echo "DEBUG: cannot list $SYSTEM_EXT_DIR"
+
+mkdir -p "$USER_EXT_DIR"
+
+for ext in "$SYSTEM_EXT_DIR"/*/; do
+  [ -d "$ext" ] || continue
+  name=$(basename "$ext")
+  target="$USER_EXT_DIR/$name"
+  if [ ! -e "$target" ]; then
+    if ln -s "$ext" "$target"; then
+      echo "Linked: $name"
+    else
+      echo "ERROR: Failed to link $name (src=$ext, dst=$target)" >&2
+    fi
+  else
+    echo "Already exists: $name"
+  fi
+done
+
+echo "DEBUG: Final contents of $USER_EXT_DIR:"
+ls -la "$USER_EXT_DIR" 2>&1

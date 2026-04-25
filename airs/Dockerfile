@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # used in s6-overlay scripts
     jq rsync \
     # utilites for users
-    openssh-server git tree \
+    openssh-server vim git tree python3 \
     && rm -rf /var/lib/apt/lists/*
 
 ## install code-server
@@ -39,4 +39,11 @@ RUN if grep -q "1000" /etc/passwd; then \
         userdel --remove $(id -un "1000"); \
     fi
 
-RUN mkdir -p /work
+RUN mkdir -p /work \
+    && mkdir -p /config/extensions \
+    && chmod a+x /config
+
+# install code-server extensions
+RUN code-server --extensions-dir /config/extensions --install-extension alefragnani.project-manager \
+    && code-server --extensions-dir /config/extensions --install-extension ms-toolsai.jupyter \
+    && chmod -R a+rX /config/extensions
