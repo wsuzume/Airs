@@ -1,0 +1,47 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+TARGET_USER="${CS_USER:-josh}"
+TARGET_GROUP="${CS_GROUP:-${TARGET_USER}}"
+TARGET_UID="${CS_UID:-1000}"
+TARGET_GID="${CS_GID:-1000}"
+HOME_DIR="/home/${TARGET_USER}"
+
+USER_PATH="${HOME_DIR}/.safe-chain/bin:${HOME_DIR}/.local/bin:${HOME_DIR}/.goenv/bin:${PATH}"
+
+as_user() {
+    s6-setuidgid ${TARGET_USER} env HOME=${HOME_DIR} PATH=${USER_PATH} bash -c "$*"
+}
+
+if as_user 'command -v safe-chain' &>/dev/null; then
+    echo "safe-chain is already installed"
+else
+    echo "Installing safe-chain..."
+    as_user 'curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh'
+fi
+
+if as_user '[ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh" && command -v nvm' &>/dev/null; then
+    echo "nvm is already installed"
+else
+    echo "Installing nvm..."
+    as_user 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash'
+    as_user 'source "$HOME/.nvm/nvm.sh" && nvm install --lts && nvm use --lts'
+fi
+
+if as_user 'command -v uv' &>/dev/null; then
+    echo "uv is already installed"
+else
+    echo "Installing uv..."
+    as_user 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+    as_user "grep -qF '.local/bin' ${HOME_DIR}/.bashrc || echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ${HOME_DIR}/.bashrc"
+fi
+
+if as_user 'command -v goenv' &>/dev/null; then
+    echo "goenv is already installed"
+else
+    echo "Installing goenv..."
+    as_user "git clone https://github.com/go-nv/goenv.git ${HOME_DIR}/.goenv"
+    as_user "echo 'export GOENV_ROOT=\"\$HOME/.goenv\"' >> ${HOME_DIR}/.bash_profile"
+    as_user "echo 'export PATH=\"\$GOENV_ROOT/bin:\$PATH\"' >> ${HOME_DIR}/.bash_profile"
+    as_user "echo 'eval \"\$(goenv init -)\"' >> ${HOME_DIR}/.bash_profile"
+fi
