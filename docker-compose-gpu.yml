@@ -9,7 +9,13 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./work:/work
+      - /home/josh/work:/home/josh
+      - /home/josh/code-server/data:/home/josh/.local/share/code-server
+      - /home/josh/code-server/extensions:/home/josh/.local/share/code-server/extensions
+      - /home/josh/.ssh:/home/josh/.ssh:ro
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
+      NVIDIA_VISIBLE_DEVICES: all
+      CS_USER: josh
+      CS_UID: 1000
+      CS_GID: 1000
